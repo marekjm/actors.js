@@ -38,11 +38,24 @@ var Actors = (new (function () {
         };
     }
 
+    function Message(from, to, what) {
+        this.reply = function (message) {
+            Actors.deliever(to, from, message);
+        };
+
+        this.sender = function () {
+            return from;
+        };
+        this.recipient = function () {
+            return to;
+        };
+        this.content = function () {
+            return what;
+        };
+    }
+
     this.deliever = function (actor, recipient, content) {
-        mailboxes[recipient].append({
-            sender: actor,
-            content: content,
-        });
+        mailboxes[recipient].append(new Message(actor, recipient, content));
         return this;
     };
     this.notify = function (recipient, content) {
