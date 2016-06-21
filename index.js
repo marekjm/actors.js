@@ -62,6 +62,33 @@ var IntervalActor = (new Actors.Actor('Interval', function (mailbox) {
     };
 }));
 
+var ActorA = (new Actors.Actor('A', function (mailbox) {
+    this.consume = function (message) {
+        var m = message.content();
+        if (m == 'toB') {
+            mailbox.send('B', 'fromA');
+        } else if (m == 'replyFromB') {
+            mailbox.send('MessageBuilder', 'A received a reply from B');
+        } else if (m == 'fromB') {
+            mailbox.send('MessageBuilder', 'A got a message from B, replying...');
+            message.reply('replyFromA');
+        }
+    };
+}));
+var ActorB = (new Actors.Actor('B', function (mailbox) {
+    this.consume = function (message) {
+        var m = message.content();
+        if (m == 'toA') {
+            mailbox.send('A', 'fromB');
+        } else if (m == 'replyFromA') {
+            mailbox.send('MessageBuilder', 'B received a reply from A');
+        } else if (m == 'fromA') {
+            mailbox.send('MessageBuilder', 'B got a message from A, replying...');
+            message.reply('replyFromB');
+        }
+    };
+}));
+
 (function () {
     document.getElementById('click-me-button').addEventListener('click', function (event) {
         Actors.notify('ClickReceiver', event).kick();
@@ -71,6 +98,13 @@ var IntervalActor = (new Actors.Actor('Interval', function (mailbox) {
     });
     document.getElementById('stop-interval-button').addEventListener('click', function (event) {
         IntervalActor.notify('stop');
+    });
+
+    document.getElementById('send-ab-button').addEventListener('click', function (event) {
+        ActorA.notify('toB');
+    });
+    document.getElementById('send-ba-button').addEventListener('click', function (event) {
+        ActorB.notify('toA');
     });
 
     Actors.notify('Interval', 'start').kick();
