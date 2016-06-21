@@ -71,6 +71,7 @@ var ActorA = (new Actors.Actor('A', function (mailbox) {
             mailbox.send('MessageBuilder', 'A received a reply from B');
         } else if (m == 'fromB') {
             mailbox.send('MessageBuilder', 'A got a message from B, replying...');
+            for (var i = 0; i < (10e8 * 4); ++i) {}
             message.reply('replyFromA');
         }
     };
