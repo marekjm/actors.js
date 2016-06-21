@@ -8,15 +8,15 @@
 Actors.register('ClickReceiver', function (mailbox) {
     this.consume = function (message) {
         console.log(message);
-        if (message.content != 'main') {
-            mailbox.send('MessageBuilder', message.content);
+        if (message.content() != 'main') {
+            mailbox.send('MessageBuilder', message.content());
         }
     };
 });
 Actors.register('MessageBuilder', function (mailbox) {
     this.consume = function (message) {
         var p = document.createElement('p');
-        p.appendChild(document.createTextNode(JSON.stringify(message)));
+        p.appendChild(document.createTextNode(JSON.stringify(message.content())));
         document.getElementById('messages').appendChild(p);
     };
 });
@@ -31,20 +31,31 @@ Actors.register('MessageBuilder', function (mailbox) {
 var IntervalActor = (new Actors.Actor('Interval', function (mailbox) {
     var interval_id = undefined;
 
+    function start() {
+        if (interval_id === undefined) {
+            interval_id = setInterval(function () {
+                Actors.notify('MessageBuilder', 'Whooooosh!').kick();
+            }, 1000);
+            mailbox.send('MessageBuilder', 'started');
+        } else {
+            mailbox.send('MessageBuilder', 'Interval received start message while running');
+        }
+    }
+    function stop() {
+        if (interval_id !== undefined) {
+            clearInterval(interval_id);
+            interval_id = undefined;
+            mailbox.send('MessageBuilder', 'stopped');
+        } else {
+            mailbox.send('MessageBuilder', 'Interval received stop message while not running');
+        }
+    }
+
     this.consume = function (message) {
-        if (message.content == 'start') {
-            if (interval_id === undefined) {
-                interval_id = setInterval(function () {
-                    Actors.notify('MessageBuilder', 'Whooooosh!').kick();
-                }, 1000);
-            } else {
-                mailbox.send('MessageBuilder', 'Interval received start message while running');
-            }
-        } else if (message.content == 'stop') {
-            if (interval_id !== undefined) {
-                clearInterval(interval_id);
-                interval_id = undefined;
-            }
+        if (message.content() == 'start') {
+            start();
+        } else if (message.content() == 'stop') {
+            stop();
         } else {
             mailbox.send('MessageBuilder', 'Interval actor got a bad message');
         }
